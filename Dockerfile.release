@@ -1,0 +1,70 @@
+# Baseline image.
+from ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 as baseline
+
+# Extra step to silence deps that don't obey simple "apt install -yq"
+# instructions.
+RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+    apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+    apt install -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" \
+    tzdata
+
+
+# Install dependencies. Make sure "naggy" apps don't break our automated builds
+# by prompting us via interactive menus, even if we've hinted that we don't
+# want any via "apt install -y". Also, always for an "apt update".
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+    apt install -y \
+    -o Dpkg::Options::="--force-confdef" \
+    -o Dpkg::Options::="--force-confold" \
+    automake \
+    build-essential \
+    cmake \
+    g++ \
+    gcc \
+    git \
+    libtool \
+    libssl-dev \
+    make \
+    python3 \
+    python3-dev \
+    sudo \
+    vim
+
+################################################################################
+#  mm   m  mmmm mmmmmmm mmmmmm
+#  #"m  # m"  "m   #    #     
+#  # #m # #    #   #    #mmmmm
+#  #  # # #    #   #    #     
+#  #   ##  #mm#    #    #mmmmm
+# This could save/reduce image size via the use of various optimizations, such
+# as loading the build artfacts via an external Makefile, Docker mounts, etc.
+# As it stands, I'm currently migrating my build infra to an RPI build farm, so
+# time doesn't permit at the moment.
+# -Matthew
+# TODO: optimize.
+################################################################################
+
+# Build wolfSSL.
+RUN git clone https://github.com/wolfSSL/wolfssl.git
+RUN cd wolfssl && \
+    ./autogen.sh && \
+    ./configure --enable-certgen --enable-certreq --enable-certext --enable-pkcs7 --enable-cryptocb --enable-aescfb && \
+    make -j$(nproc) && \
+    sudo make install && \
+    sudo ldconfig
+
+# Build wolfTPM.
+RUN cd wolfssl && \
+    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt && \
+    make -j$(nproc)
+# (no need of make install in our case)
+
+# Build ibmswtpm.
+RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
+    cd ibmswtpm2/src && \
+    make -j$(nproc) install
+
