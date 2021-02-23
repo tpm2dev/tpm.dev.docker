@@ -2,7 +2,7 @@
 # @brief: 	Top-level build script.
 # @copyright: 	Matthew Giassa, Dimitar Tomov, 2021.
 # @author: 	Matthew Giassa.
-# @author: 	Dimitar Tomov..
+# @author: 	Dimitar Tomov.
 # @email:	matthew@giassa.net
 # @license:	MIT license with conditions for ownership:
 # 		This project and its associated files come with no warranty,
