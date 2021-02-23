@@ -22,10 +22,15 @@ DOCKER_TAG=0.0.1
 DOCKER_IMAGE=iax-tpm-runtime
 DOCKER_REPO=iaxes
 
+################################################################################
+# Build goals/recipes/targets.
+################################################################################
 # Set default target.
 .DEFAULT_GOAL: all
+#------------------------------------------------------------------------------#
 
 # Top-level goal.
+#------------------------------------------------------------------------------#
 .PHONY: all
 all:
 	# Build Docker image. Use DOCKER_BUILDKIT so we can bundle Dockerfiles
@@ -36,6 +41,7 @@ all:
 			--target=baseline \
 			--tag=$(DOCKER_REPO)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 
+#------------------------------------------------------------------------------#
 .PHONY: publish
 publish:
 	# Push the image to Dockerhub for long-term artifact storage.
@@ -48,3 +54,4 @@ publish:
 
 	# Push "latest".
 	docker push $(DOCKER_REPO)/$(DOCKER_IMAGE):latest
+
