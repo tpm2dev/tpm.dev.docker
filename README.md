@@ -19,3 +19,8 @@ A place for developer-friendly computer security. We are a group of developers w
 * We made over 33 online meetups in 2020
 
 Explore our resources here - [TPM.dev](https://www.tpm.dev "TPM.dev Homepage")
+
+
+## Building
+
+To build the docker container type `make `
