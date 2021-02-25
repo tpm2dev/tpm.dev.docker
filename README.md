@@ -27,5 +27,5 @@ To build the docker container type `make `
 ## Example run
 
 ```
-docker run --rm iaxes/iax-tpm-runtime:0.0.1 /usr/bin/bash -c "tpm_server >/dev/null & sleep 1; /wolftpm/examples/wrap/wrap_test"
+docker run --rm iaxes/iax-tpm-runtime:latest /usr/bin/bash -c "tpm_server >/dev/null & sleep 1; /wolftpm/examples/wrap/wrap_test"
 ```
