@@ -20,7 +20,12 @@ A place for developer-friendly computer security. We are a group of developers w
 
 Explore our resources here - [TPM.dev](https://www.tpm.dev "TPM.dev Homepage")
 
-
 ## Building
 
 To build the docker container type `make `
+
+## Example run
+
+```
+docker run --rm iaxes/iax-tpm-runtime:0.0.1 /usr/bin/bash -c "tpm_server >/dev/null & sleep 1; /wolftpm/examples/wrap/wrap_test"
+```
