@@ -32,7 +32,8 @@ RUN apt update -yq && \
     python3 \
     python3-dev \
     sudo \
-    vim
+    vim \
+    acl
 
 ################################################################################
 #  mm   m  mmmm mmmmmmm mmmmmm
