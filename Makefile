@@ -18,7 +18,7 @@
 ################################################################################
 # TODO: this should come from an external CI-related file like for GitHub or
 # GitLab, etc.
-DOCKER_TAG=0.0.1
+DOCKER_TAG=0.0.3
 DOCKER_IMAGE=iax-tpm-runtime
 DOCKER_REPO=iaxes
 

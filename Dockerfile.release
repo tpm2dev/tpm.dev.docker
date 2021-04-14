@@ -1,4 +1,3 @@
-# Baseline image.
 from ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 as baseline
 
 # Extra step to silence deps that don't obey simple "apt install -yq"
@@ -32,7 +31,8 @@ RUN apt update -yq && \
     python3 \
     python3-dev \
     sudo \
-    vim
+    vim \
+    acl
 
 ################################################################################
 #  mm   m  mmmm mmmmmmm mmmmmm
@@ -48,23 +48,188 @@ RUN apt update -yq && \
 # TODO: optimize.
 ################################################################################
 
+
+
+
+################################################################################
+#
 # Build wolfSSL.
+#
+################################################################################
+
 RUN git clone https://github.com/wolfSSL/wolfssl.git
 RUN cd wolfssl && \
     ./autogen.sh && \
     ./configure --enable-certgen --enable-certreq --enable-certext --enable-pkcs7 --enable-cryptocb --enable-aescfb && \
-    make -j$(nproc) && \
+    make -j$(nproc) check && \
     sudo make install && \
     sudo ldconfig
 
+################################################################################
+#
 # Build wolfTPM.
-RUN cd wolfssl && \
+RUN git clone https://github.com/wolfSSL/wolftpm.git
+RUN cd wolftpm && \
+    ./autogen.sh && \
     ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt && \
     make -j$(nproc)
 # (no need of make install in our case)
 
+
+################################################################################
+#
 # Build ibmswtpm.
+#
+################################################################################
+
 RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
     cd ibmswtpm2/src && \
     make -j$(nproc) install
+
+
+################################################################################
+#
+# Build eltt2
+#
+################################################################################
+
+RUN git clone https://github.com/Infineon/eltt2.git && \
+    cd eltt2 && \
+    make 
+
+################################################################################
+#
+# Build tpm2-tss/abrmd/tools
+#   and additionally:  tpm2-openssl, totp and pkcs11
+#
+################################################################################
+
+# Part 1: bring in the required packages
+#         NB: the apt update statments here could be optimised 
+# Each of these RUN statements corresponds to the tss, abrmd and tools respectively
+
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+  apt -y install \
+  autoconf-archive \
+  libcmocka0 \
+  libcmocka-dev \
+  procps \
+  iproute2 \
+  build-essential \
+  git \
+  pkg-config \
+  gcc \
+  libtool \
+  automake \
+  libssl-dev \
+  uthash-dev \
+  autoconf \
+  doxygen \
+  libjson-c-dev \
+  libini-config-dev \
+  libcurl4-openssl-dev
+
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+  apt -y install \
+    libglib2.0-dev
+
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+  apt -y install \
+    autoconf automake libtool pkg-config gcc \
+    libssl-dev libcurl4-gnutls-dev uuid-dev python-yaml
+
+
+# Part 2: create a tss user for abrmd
+
+RUN useradd --system --user-group tss
+
+
+# Part 3: setup the working directory
+
+RUN mkdir tpm2
+
+
+# Part 4: buld tpm2-tss
+
+WORKDIR /tpm2
+RUN git clone https://github.com/tpm2-software/tpm2-tss.git && \
+    git clone https://github.com/tpm2-software/tpm2-abrmd.git && \
+    git clone https://github.com/tpm2-software/tpm2-tools.git && \
+    git clone https://github.com/tpm2-software/tpm2-pkcs11.git && \
+    git clone https://github.com/tpm2-software/tpm2-openssl.git && \
+    git clone https://github.com/tpm2-software/tpm2-totp.git
+
+WORKDIR /tpm2/tpm2-tss
+RUN ./bootstrap && \
+    ./configure --with-udevrulesprefix && \
+    make -j$(nproc) && \
+    make install
+
+RUN ldconfig
+
+
+# Part 5: buld tpm2-abrmd
+
+WORKDIR /tpm2/tpm2-abrmd
+RUN ./bootstrap && \
+    ./configure --with-dbuspolicydir=/etc/dbus-1/system.d  && \
+    make -j$(nproc) && \
+    make install
+
+RUN ldconfig
+
+
+# Part 6: buld tpm2-tools
+
+WORKDIR /tpm2/tpm2-tools
+RUN ./bootstrap && \
+    ./configure && \
+    make -j$(nproc) && \
+    make install
+
+RUN ldconfig
+
+
+# Part 7: build PKCS11
+
+
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+  apt -y install libsqlite3-dev libyaml-dev
+
+
+
+WORKDIR /tpm2/tpm2-pkcs11
+RUN ./bootstrap && \
+    ./configure && \
+    make
+
+# Part 8: build OPENSSL
+
+#RUN apt update -yq && \
+#    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+#  apt -y install libssl-dev
+
+#WORKDIR /tpm2/tpm2-openssl
+#RUN ./bootstrap && \
+#    ./configure && \ 
+#    make && \
+#    make install
+
+# Part 9: build TOTP
+
+RUN apt update -yq && \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+  apt -y install libqrencode-dev
+
+
+WORKDIR /tpm2/tpm2-totp
+RUN ./bootstrap && \
+    ./configure && \
+    make && \
+    make install
+
 

@@ -5,6 +5,8 @@ This docker image is contribution by Matthew Giassa (member of TPM.dev). It cont
 * wolfTPM 2.0
 * wolfSSL
 * IBM TPM 2.0 Simulator
+* Infineon eltt2
+* TPM2_TSS, ABRMD, TOOLS, TPM2-OPENSSL, TPM2-PKCS#11 and TOTP
 
 All together for rapid TPM development and ease when participating in one of our TPM.dev courses.
 
@@ -19,3 +21,13 @@ A place for developer-friendly computer security. We are a group of developers w
 * We made over 33 online meetups in 2020
 
 Explore our resources here - [TPM.dev](https://www.tpm.dev "TPM.dev Homepage")
+
+## Building
+
+To build the docker container type `make `
+
+## Example run
+
+```
+docker run --rm iaxes/iax-tpm-runtime:latest /usr/bin/bash -c "tpm_server >/dev/null & sleep 1; /wolftpm/examples/wrap/wrap_test"
+```
