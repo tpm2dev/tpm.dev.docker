@@ -25,7 +25,7 @@ docker pull tpmdev/tpm2-runtime
 Generate random number using the TPM2 simulator:
 
 ```
-docker run --rm -e TPM2TOOLS_TCTI="mssim:host=localhost,port=2321" tpmdev/tpm2-runtime:latest /bin/bash -c "tpm_server >/dev/null & sleep 1; tpm2_startup -c; tpm2_getrandom 64"
+docker run --rm -e TPM2TOOLS_TCTI="mssim:host=localhost,port=2321" tpmdev/tpm2-runtime:latest /bin/bash -c "tpm_server >/dev/null & sleep 1; tpm2_startup -c; tpm2_getrandom 8"
 ```
 
 ### Running on Apple M1
@@ -33,7 +33,7 @@ docker run --rm -e TPM2TOOLS_TCTI="mssim:host=localhost,port=2321" tpmdev/tpm2-r
 To run amd64 docker images on M1 requires an extra parameter `--platform linux/amd64`:
 
 ```
-docker run --rm --platform=linux/amd64 -e TPM2TOOLS_TCTI="mssim:host=localhost,port=2321" tpmdev/tpm2-runtime:latest /bin/bash -c "tpm_server >/dev/null & sleep 1; tpm2_startup -c; tpm2_getrandom 64"
+docker run --rm --platform=linux/amd64 -e TPM2TOOLS_TCTI="mssim:host=localhost,port=2321" tpmdev/tpm2-runtime:latest /bin/bash -c "tpm_server >/dev/null & sleep 1; tpm2_startup -c; tpm2_getrandom 8"
 ```
 
 ## What is [TPM.dev](https://www.tpm.dev)?
