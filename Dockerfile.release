@@ -1,5 +1,5 @@
 # Baseline image.
-from ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 as baseline
+FROM --platform=linux/amd64 ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 as baseline
 
 # Extra step to silence deps that don't obey simple "apt install -yq"
 # instructions.
@@ -69,10 +69,10 @@ RUN cd wolfssl && \
 ################################################################################
 #
 # Build wolfTPM.
-RUN git clone https://github.com/wolfSSL/wolftpm.git
+RUN git clone --depth 1 --branch v2.5.0 https://github.com/wolfSSL/wolftpm.git
 RUN cd wolftpm && \
     ./autogen.sh && \
-    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt && \
+    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples && \
     make -j$(nproc)
 # (no need of make install in our case)
 
