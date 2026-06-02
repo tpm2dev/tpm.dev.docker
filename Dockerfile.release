@@ -72,7 +72,7 @@ RUN cd wolfssl && \
 RUN git clone --depth 1 https://github.com/wolfSSL/wolftpm.git
 RUN cd wolftpm && \
     ./autogen.sh && \
-    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples && \
+    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples --disable-fwtpm && \
     make -j$(nproc)
 # (no need of make install in our case)
 
