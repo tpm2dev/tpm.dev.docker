@@ -58,7 +58,7 @@ RUN apt update -yq && \
 #
 ################################################################################
 
-RUN git clone https://github.com/wolfSSL/wolfssl.git
+RUN git clone --depth 1 https://github.com/wolfSSL/wolfssl.git
 RUN cd wolfssl && \
     ./autogen.sh && \
     ./configure --enable-certgen --enable-certreq --enable-certext --enable-pkcs7 --enable-cryptocb --enable-aescfb && \
@@ -69,7 +69,7 @@ RUN cd wolfssl && \
 ################################################################################
 #
 # Build wolfTPM.
-RUN git clone --depth 1 --branch v2.5.0 https://github.com/wolfSSL/wolftpm.git
+RUN git clone --depth 1 https://github.com/wolfSSL/wolftpm.git
 RUN cd wolftpm && \
     ./autogen.sh && \
     ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples && \
@@ -83,7 +83,7 @@ RUN cd wolftpm && \
 #
 ################################################################################
 
-RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
+RUN git clone --depth 1 https://github.com/kgoldman/ibmswtpm2.git && \
     cd ibmswtpm2/src && \
     make -j$(nproc) install
 
@@ -94,7 +94,7 @@ RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
 #
 ################################################################################
 
-RUN git clone https://github.com/Infineon/eltt2.git && \
+RUN git clone --depth 1 https://github.com/Infineon/eltt2.git && \
     cd eltt2 && \
     make 
 
@@ -155,9 +155,9 @@ RUN mkdir tpm2
 # Part 4: buld tpm2-tss
 
 WORKDIR /tpm2
-RUN git clone https://github.com/tpm2-software/tpm2-tss.git && \
-    git clone https://github.com/tpm2-software/tpm2-abrmd.git && \
-    git clone https://github.com/tpm2-software/tpm2-tools.git
+RUN git clone --depth 1 https://github.com/tpm2-software/tpm2-tss.git && \
+    git clone --depth 1 https://github.com/tpm2-software/tpm2-abrmd.git && \
+    git clone --depth 1 https://github.com/tpm2-software/tpm2-tools.git
 
 WORKDIR /tpm2/tpm2-tss
 RUN ./bootstrap && \
