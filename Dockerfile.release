@@ -204,13 +204,13 @@ RUN ldconfig
 WORKDIR /tpm2/tpm2-tss-engine
 RUN ./bootstrap && ./configure && \
     sed -i 's/-Werror//g' Makefile && \
-    make -j && make install && ldconfig
+    make -j$(nproc) && make install && ldconfig
 
 # Part 8 build tpm2 provider (openssl3 integration)
 
 WORKDIR /tpm2/openssl-3.0.15
 RUN ./config --prefix=/opt/openssl-3 no-tests no-legacy shared && \
-    make -j && make install && ldconfig
+    make -j$(nproc) && make install && ldconfig
 
 ENV PKG_CONFIG_PATH=/opt/openssl-3/lib/pkgconfig:/opt/openssl-3/lib64/pkgconfig
 ENV LD_LIBRARY_PATH=/opt/openssl-3/lib:/opt/openssl-3/lib64
