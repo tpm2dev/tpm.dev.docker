@@ -1,8 +1,7 @@
-# Baseline image.
-FROM --platform=linux/amd64 ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 as baseline
+# Baseline image
+FROM ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 AS baseline
 
 # Extra step to silence deps that don't obey simple "apt install -yq"
-# instructions.
 RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     apt update -yq && \
     DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -33,7 +32,8 @@ RUN apt update -yq && \
     python3-dev \
     sudo \
     vim \
-    acl
+    acl \
+    wget
 
 ################################################################################
 #  mm   m  mmmm mmmmmmm mmmmmm
@@ -58,7 +58,7 @@ RUN apt update -yq && \
 #
 ################################################################################
 
-RUN git clone https://github.com/wolfSSL/wolfssl.git
+RUN git clone --depth 1 https://github.com/wolfSSL/wolfssl.git
 RUN cd wolfssl && \
     ./autogen.sh && \
     ./configure --enable-certgen --enable-certreq --enable-certext --enable-pkcs7 --enable-cryptocb --enable-aescfb && \
@@ -69,10 +69,10 @@ RUN cd wolfssl && \
 ################################################################################
 #
 # Build wolfTPM.
-RUN git clone --depth 1 --branch v2.5.0 https://github.com/wolfSSL/wolftpm.git
+RUN git clone --depth 1 https://github.com/wolfSSL/wolftpm.git
 RUN cd wolftpm && \
     ./autogen.sh && \
-    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples && \
+    ./configure -enable-swtpm --enable-debug --disable-shared --enable-wolfcrypt --disable-examples --disable-fwtpm && \
     make -j$(nproc)
 # (no need of make install in our case)
 
@@ -83,7 +83,7 @@ RUN cd wolftpm && \
 #
 ################################################################################
 
-RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
+RUN git clone --depth 1 --branch rev164-2020-192.2 https://github.com/kgoldman/ibmswtpm2.git && \
     cd ibmswtpm2/src && \
     make -j$(nproc) install
 
@@ -94,7 +94,7 @@ RUN git clone https://github.com/kgoldman/ibmswtpm2.git && \
 #
 ################################################################################
 
-RUN git clone https://github.com/Infineon/eltt2.git && \
+RUN git clone --depth 1 https://github.com/Infineon/eltt2.git && \
     cd eltt2 && \
     make 
 
@@ -155,9 +155,13 @@ RUN mkdir tpm2
 # Part 4: buld tpm2-tss
 
 WORKDIR /tpm2
-RUN git clone https://github.com/tpm2-software/tpm2-tss.git && \
-    git clone https://github.com/tpm2-software/tpm2-abrmd.git && \
-    git clone https://github.com/tpm2-software/tpm2-tools.git
+RUN git clone --depth 1 --branch 4.1.3 https://github.com/tpm2-software/tpm2-tss.git && \
+    git clone --depth 1 https://github.com/tpm2-software/tpm2-abrmd.git && \
+    git clone --depth 1 https://github.com/tpm2-software/tpm2-tools.git
+RUN git clone --depth 1 https://github.com/tpm2-software/tpm2-tss-engine.git && \
+    git clone --depth 1 --branch 1.3.0 https://github.com/tpm2-software/tpm2-openssl.git
+RUN wget https://www.openssl.org/source/openssl-3.0.15.tar.gz && \
+    tar -xzf openssl-3.0.15.tar.gz
 
 WORKDIR /tpm2/tpm2-tss
 RUN ./bootstrap && \
@@ -188,3 +192,31 @@ RUN ./bootstrap && \
     make install
 
 RUN ldconfig
+
+################################################################################
+#
+# Build OpenSSL integration.
+#
+################################################################################
+
+# Part 7 build tpm2 engine (openssl1.1.1 integration)
+
+WORKDIR /tpm2/tpm2-tss-engine
+RUN ./bootstrap && ./configure && \
+    sed -i 's/-Werror//g' Makefile && \
+    make -j && make install && ldconfig
+
+# Part 8 build tpm2 provider (openssl3 integration)
+
+WORKDIR /tpm2/openssl-3.0.15
+RUN ./config --prefix=/opt/openssl-3 no-tests no-legacy shared && \
+    make -j && make install && ldconfig
+
+ENV PKG_CONFIG_PATH=/opt/openssl-3/lib/pkgconfig:/opt/openssl-3/lib64/pkgconfig
+ENV LD_LIBRARY_PATH=/opt/openssl-3/lib:/opt/openssl-3/lib64
+
+WORKDIR /tpm2/tpm2-openssl
+RUN ./bootstrap && \
+    ./configure --with-openssl=/opt/openssl-3 \
+    --with-modulesdir=/opt/openssl-3/lib64/ossl-modules && \
+    make -j$(nproc) &&  make install && ldconfig
