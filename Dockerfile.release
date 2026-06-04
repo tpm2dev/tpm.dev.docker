@@ -1,6 +1,5 @@
-# Baseline image with dynamic PLATFORM argument
-ARG BUILDPLATFORM
-FROM --platform=$BUILDPLATFORM ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 AS baseline
+# Baseline image
+FROM ubuntu:20.04@sha256:703218c0465075f4425e58fac086e09e1de5c340b12976ab9eb8ad26615c3715 AS baseline
 
 # Extra step to silence deps that don't obey simple "apt install -yq"
 RUN DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -84,7 +83,7 @@ RUN cd wolftpm && \
 #
 ################################################################################
 
-RUN git clone --depth 1 https://github.com/kgoldman/ibmswtpm2.git && \
+RUN git clone --depth 1 --branch rev164-2020-192.2 https://github.com/kgoldman/ibmswtpm2.git && \
     cd ibmswtpm2/src && \
     make -j$(nproc) install
 
@@ -156,11 +155,11 @@ RUN mkdir tpm2
 # Part 4: buld tpm2-tss
 
 WORKDIR /tpm2
-RUN git clone --depth 1 https://github.com/tpm2-software/tpm2-tss.git && \
+RUN git clone --depth 1 --branch 4.1.3 https://github.com/tpm2-software/tpm2-tss.git && \
     git clone --depth 1 https://github.com/tpm2-software/tpm2-abrmd.git && \
     git clone --depth 1 https://github.com/tpm2-software/tpm2-tools.git
 RUN git clone --depth 1 https://github.com/tpm2-software/tpm2-tss-engine.git && \
-    git clone --depth 1 https://github.com/tpm2-software/tpm2-openssl.git
+    git clone --depth 1 --branch 1.3.0 https://github.com/tpm2-software/tpm2-openssl.git
 RUN wget https://www.openssl.org/source/openssl-3.0.15.tar.gz && \
     tar -xzf openssl-3.0.15.tar.gz
 
